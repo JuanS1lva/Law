@@ -662,10 +662,7 @@
 
                 <div class="photo-gallery">
                     <div class="photo-item" v-for="(photo, index) in photos" :key="index">
-                        <div v-if="!photo.url" class="photo-placeholder">
-                            {{ photo.placeholder }}
-                        </div>
-                        <img v-else :src="photo.url" :alt="photo.alt">
+                        <img src="1.jpg" :alt="photo.alt">
                     </div>
                 </div>
 
@@ -703,7 +700,7 @@
                     photos: [
                         {
                             placeholder: '📸 Foto 1\nHaz clic para agregar',
-                            url: './assets/images/1.jpg',
+                            url: './1.jpg',
                             alt: 'Lau'
                         },
                         // {
