@@ -661,7 +661,9 @@
                 </div>
 
                 <div class="photo-gallery">
-                    <img src="./1.JPG">
+                    <div class="photo-item" v-for="(photo, index) in photos" :key="index">
+                        <img src="./1.JPG" :alt="photo.alt">
+                    </div>
                 </div>
 
                 <div class="signature">
