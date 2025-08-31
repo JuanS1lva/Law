@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carta Romántica Interactiva</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: #000;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Estrellas de fondo */
+        .stars-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background: radial-gradient(2px 2px at 20px 30px, #fff, transparent),
+                        radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.9), transparent),
+                        radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+                        radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.8), transparent),
+                        radial-gradient(2px 2px at 160px 30px, #fff, transparent),
+                        radial-gradient(1px 1px at 200px 50px, rgba(255,255,255,0.7), transparent),
+                        radial-gradient(2px 2px at 240px 20px, #fff, transparent),
+                        radial-gradient(1px 1px at 280px 80px, rgba(255,255,255,0.6), transparent);
+            background-repeat: repeat;
+            background-size: 300px 150px;
+            animation: twinkle 4s ease-in-out infinite;
+        }
+
+        .stars-background::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(1px 1px at 50px 20px, #fff, transparent),
+                        radial-gradient(1px 1px at 100px 60px, rgba(255,255,255,0.9), transparent),
+                        radial-gradient(2px 2px at 150px 10px, #fff, transparent),
+                        radial-gradient(1px 1px at 180px 50px, rgba(255,255,255,0.8), transparent),
+                        radial-gradient(2px 2px at 200px 90px, #fff, transparent),
+                        radial-gradient(1px 1px at 250px 30px, rgba(255,255,255,0.7), transparent),
+                        radial-gradient(2px 2px at 300px 70px, #fff, transparent),
+                        radial-gradient(1px 1px at 350px 10px, rgba(255,255,255,0.6), transparent);
+            background-repeat: repeat;
+            background-size: 400px 200px;
+            animation: twinkle 6s ease-in-out infinite reverse;
+        }
+
+        .stars-background::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(1px 1px at 30px 80px, #fff, transparent),
+                        radial-gradient(2px 2px at 80px 20px, rgba(255,255,255,0.7), transparent),
+                        radial-gradient(1px 1px at 120px 70px, #eee, transparent),
+                        radial-gradient(2px 2px at 170px 40px, rgba(255,255,255,0.5), transparent),
+                        radial-gradient(1px 1px at 220px 10px, #ddd, transparent);
+            background-repeat: repeat;
+            background-size: 300px 150px;
+            animation: twinkle 8s ease-in-out infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% {
+                opacity: 0.2;
+                transform: scale(1) rotate(0deg);
+            }
+            25% {
+                opacity: 0.8;
+                transform: scale(1.1) rotate(90deg);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.3) rotate(180deg);
+            }
+            75% {
+                opacity: 0.6;
+                transform: scale(1.1) rotate(270deg);
+            }
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .letter-container {
+            background: transparent;
+            border-radius: 20px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            transform: translateY(0);
+            transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .letter-container:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out forwards;
+        }
+
+        .header h1 {
+            color: #ffffff;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+        }
+
+        .header .date {
+            color: #e0e0e0;
+            font-style: italic;
+            font-size: 1.1rem;
+            text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.6);
+        }
+
+        .photo-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 40px 0;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 0.3s forwards;
+        }
+
+        .photo-item {
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transform: scale(1);
+            transition: all 0.4s ease;
+        }
+
+        .photo-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .photo-placeholder {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(45deg, #ff9a9e, #fecfef);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .photo-item img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+
+        .photo-item:hover img {
+            transform: scale(1.1);
+        }
+
+        .content {
+            line-height: 1.8;
+            font-size: 1.1rem;
+            color: #ffffff;
+            margin: 30px 0;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 0.6s forwards;
+            text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.7);
+        }
+
+        .content p {
+            margin-bottom: 20px;
+            text-align: justify;
+        }
+
+        .youtube-section {
+            margin: 40px 0;
+            text-align: center;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 0.9s forwards;
+        }
+
+        .youtube-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        }
+
+        .youtube-placeholder {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.1rem;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .youtube-iframe {
+            width: 100%;
+            height: 300px;
+            border: none;
+            border-radius: 15px;
+        }
+
+        .audio-section {
+            margin: 40px 0;
+            text-align: center;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 1.2s forwards;
+        }
+
+        .audio-section h3 {
+            color: #ffffff;
+            text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.7);
+            margin-bottom: 20px;
+        }
+
+        .audio-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        }
+
+        .audio-placeholder {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.1rem;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .audio-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+        }
+
+        .audio-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .audio-player {
+            background: 
+                radial-gradient(ellipse at 20% 30%, rgba(120, 119, 198, 0.4) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 70%, rgba(255, 119, 198, 0.5) 0%, transparent 50%),
+                radial-gradient(ellipse at 40% 80%, rgba(120, 219, 255, 0.4) 0%, transparent 50%),
+                radial-gradient(ellipse at 90% 20%, rgba(255, 219, 120, 0.3) 0%, transparent 50%),
+                radial-gradient(ellipse at 60% 50%, rgba(198, 120, 255, 0.3) 0%, transparent 50%),
+                radial-gradient(ellipse at 10% 60%, rgba(255, 120, 120, 0.2) 0%, transparent 50%),
+                linear-gradient(135deg, rgba(78, 205, 196, 0.15) 0%, rgba(68, 160, 141, 0.15) 100%);
+            padding: 30px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            border-radius: 20px;
+        }
+
+        .audio-player::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 30% 40%, rgba(255, 255, 255, 0.1) 0%, transparent 30%),
+                radial-gradient(circle at 70% 60%, rgba(255, 255, 255, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.06) 0%, transparent 35%);
+            animation: nebula-glow 8s ease-in-out infinite;
+        }
+
+        .audio-player::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(ellipse at 60% 50%, rgba(120, 119, 198, 0.2) 0%, transparent 60%),
+                radial-gradient(ellipse at 25% 75%, rgba(255, 119, 198, 0.15) 0%, transparent 55%);
+            animation: nebula-drift 12s ease-in-out infinite;
+        }
+
+        @keyframes nebula-glow {
+            0%, 100% {
+                opacity: 0.6;
+                transform: scale(1) rotate(0deg);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.1) rotate(180deg);
+            }
+        }
+
+        @keyframes nebula-drift {
+            0%, 100% {
+                transform: translateX(0px) translateY(0px) rotate(0deg);
+            }
+            33% {
+                transform: translateX(10px) translateY(-5px) rotate(120deg);
+            }
+            66% {
+                transform: translateX(-5px) translateY(10px) rotate(240deg);
+            }
+        }
+
+        .audio-element {
+            width: 100%;
+            height: 50px;
+            border-radius: 25px;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .audio-info {
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .audio-title {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            font-weight: bold;
+            color: #ffffff;
+            text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.7);
+        }
+
+        .change-audio-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .change-audio-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .audio-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .signature {
+            text-align: right;
+            margin-top: 40px;
+            font-style: italic;
+            color: #ffffff;
+            font-size: 1.2rem;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 1.2s forwards;
+            text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.7);
+        }
+
+        .bottom-spacing {
+            height: 100px;
+            width: 100%;
+        }
+
+        .floating-hearts {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .heart {
+            position: absolute;
+            color: #ff6b9d;
+            font-size: 20px;
+            animation: float 6s ease-in-out infinite;
+            opacity: 0.6;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px) rotate(0deg);
+                opacity: 0.6;
+            }
+            50% {
+                transform: translateY(-20px) rotate(180deg);
+                opacity: 1;
+            }
+        }
+
+        .scroll-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 15px;
+            border-radius: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            font-size: 0.9rem;
+            color: #333;
+            z-index: 1000;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .letter-container {
+                padding: 20px;
+                margin: 15px 0;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .photo-gallery {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .photo-placeholder,
+            .photo-item img {
+                height: 250px;
+            }
+
+            .youtube-placeholder,
+            .youtube-iframe {
+                height: 200px;
+            }
+
+            .audio-placeholder {
+                height: 180px;
+            }
+
+            .audio-controls {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .control-btn {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+
+            .content {
+                font-size: 1rem;
+            }
+
+            .scroll-indicator {
+                top: 10px;
+                right: 10px;
+                font-size: 0.8rem;
+                padding: 8px 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .letter-container {
+                padding: 15px;
+            }
+
+            .photo-placeholder,
+            .photo-item img {
+                height: 200px;
+            }
+
+            .youtube-placeholder,
+            .youtube-iframe {
+                height: 180px;
+            }
+
+            .audio-placeholder {
+                height: 150px;
+            }
+
+            .audio-controls {
+                flex-direction: column;
+                gap: 6px;
+            }
+
+            .control-btn {
+                padding: 8px 16px;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Scroll animations */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <div class="stars-background"></div>
+    
+    <div id="app">
+
+
+        <div class="container">
+                            <div class="letter-container" 
+                     :class="{ 'fade-in': true, 'visible': isVisible }"
+                     :style="{ transform: `translateY(${scrollY * 0.05}px)` }">
+                
+                <div class="header">
+                    <h1>{{ title }}</h1>
+                    <div class="date">31 de Agosto de 2025</div>
+                </div>
+
+                <div class="audio-section">
+                    <div class="audio-container">
+                        <div class="audio-player">
+                            <audio controls autoplay class="audio-element" :muted="false">
+                                <source :src="audioUrl" type="audio/mpeg">
+                                Tu navegador no soporta el elemento de audio.
+                            </audio>
+                            <div class="audio-info">
+                                <p class="audio-title">Wet Baes - Señal</p>
+                                <div class="audio-controls">
+                                    <button @click="playAudio" class="control-btn">▶️ Reproducir</button>
+                                    <button @click="pauseAudio" class="control-btn">⏸️ Pausar</button>   
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content">
+                    <p>{{ content.paragraph1 }}</p>
+                    <p>{{ content.paragraph2 }}</p>
+                    <p>{{ content.paragraph3 }}</p>
+                </div>
+
+                <div class="content">
+                    <p>{{ content.paragraph4 }}</p>
+                    <p>{{ content.paragraph5 }}</p>
+                    <p>{{ content.paragraph6 }}</p>
+                </div>
+
+                <div class="photo-gallery">
+                    <div class="photo-item" v-for="(photo, index) in photos" :key="index">
+                        <div v-if="!photo.url" class="photo-placeholder">
+                            {{ photo.placeholder }}
+                        </div>
+                        <img v-else :src="photo.url" :alt="photo.alt">
+                    </div>
+                </div>
+
+                <div class="signature">
+                    Con todo mi amor,<br>
+                    <strong>{{ signature }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Espacio al final de la página -->
+        <div class="bottom-spacing"></div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    title: 'Laura',
+                    currentDate: new Date().toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    }),
+                    content: {
+                        paragraph1: 'La foto que acompaña esta carta es solo un pequeño reflejo de todos los recuerdos hermosos que hemos creado juntos. Cada momento cuenta una historia, cada momento es un tesoro que guardo en mi corazón.',
+                        paragraph2: 'Hola Laura, el sentido de esto más que simplemente una hoja digital será algo que perdura en el tiempo, es el hecho de que han pasado muchas cosas y muchos momentos bonitos, hermosos y tiernos de alguna otra manera. Sé que con el tiempo las cosas y como he hecho las cosas nos hemos complicado, siento que estoy apunto de perderte y no sé si sea realmente así o el presagio de algo más, pero no importa con orgullo con amor, admito que ha sido si no es la más grande, una de las cosas más grandes y bonitas en mi vida, no puedo negar ni ocultar el amor, el cariño y todo lo que en está convivencia, nos llevó a compartir y sentir, agradezco eternamente la elección que tuviste en mí, y también estoy orgulloso de alguna u otra manera haberte elegido para mí, obvio nunca esperé ni deseo perderte, pero hay cosas, sentimientos y sensaciones inevitables.',
+                        paragraph3: 'Hoy te escribo desde una mescolanza de sentimientos y sensaciones, de tristeza, amargura y desolación. En el fondo reconozco que hay cosas que me ganan y quisiera verlas hecho mucho mejor, no niego que ante las eventualidades hay cosas que no se han sorteado bien, pero aún así he tratado de estar presente y sé que tú también. Sé que nos demandamos tiempo mutuamente, y no es para más, es difícil, raro y casi imposible encontrar algo así y no está más volver a decir que espero que no sea el último. ',
+                        paragraph4: 'Sé que por más difíciles y complicados que seamos de alguna otra manera nos buscamos, nos llamamos y aunque sea el último día, sé que va a ser con todo el amor y cariño del mundo. De parte de ambos me llevo con cariño tus risas, tu piel, tu sonrisa, tu todo... porque de alguna u otra manera te acepté así, tal cual como tú me aceptaste a mí, llevamos días complicados con dificultades para llevar el temperamento del uno al otro, pero lo entiendo, no es para más, no somos seres simples y agradezco que nunca lo fuiste, eso complejo que siempre me llamó de alguna u otra manera. Pero con esto, no digo que ya no lo quiera más, sin pasar sobre ti y en esta carta que no sé en qué momento la leas. Quiero que sepas que aunque peleemos y discutamos como sea, no dejo de pensar en la sensación de estar bien contigo, de poderte ver y sentir que eres esa parte de mí que tanto me hace bien que tanto me hace feliz. Ando con miedo pero entiendo el daño, no te quiero unir algo, si tú no lo sientes de ti, sabes que te amo y sé que te amo, no necesito pruebas ni que me lo digas para sentirlo, simplemente es una verdad universal en el hecho de todo lo erótico y romántico que nos concibió, fuimos algo que jamás podré entender, pero que tanto desee, que tanto admiré y que tanto anhele. ',
+                        paragraph5: 'Hoy con los ojos tristes y con el corazón en la mano, y más sabiendo que no hago este tipo de cosas, te expreso todo mi profundo amor y deseo de bienestar que deseo que permanezcas conmigo, pero si no es así, aún te lo seguiré deseando y te seguiré queriendo. Nunca olvidaré lo de las almas llamas y el tiempo que es has compartido conmigo, para mí, ese fue el más grande acto de amor que hemos podido tener y que no estoy seguro cómo saldré de ello si no llegas a estar en mi vida, pero afrontaré con valentía la decisión que tomes porque más que poseerte. Te quiero y te amo en la diferencia y eso está mucho más por encima que el quiere el poseerte usarte o cualquier cosa semejante, la cual nunca he deseado en un mal sentido, siempre lo he querido porque ha sido tú y viene de ti y tú lo has querido así, aunque nos separemos, te llevas una parte de mi corazón y mis cosas como yo también, pero una parte de mi agradecido por haberme cruzado contigo, espero que esta carta sea una declaración de cariño y conservación por el amor mutuo y no una despedida... Si es una despedida que sepas que eres parte de mi música, quien me motivó, me movió y me enseñó muchas cosas de las cuales soy hoy en día y si me pudiera devolver en el tiempo, no lo cambiaría por nada.',
+                        paragraph6: 'Espero que en verdad lo podamos arreglar, porque no creo que seamos más que un momento o una discusión, sé que somos capaces de luchar por las cosas y estar bien. Tú sabes que estás conmigo de alguna u otra manera, en cuerpo o alma, en la música, o en las salidas, en las llamadas y en las peleas, en los viajes y las escapadas, entre drogas y alcohol. Un beso y un abrazo. Pudimos ser esa expresión de lo que muchos aspiran y quieren ser de una persona de la otra. Reitero en el más profundo rincon de mi corazón. Espero que no sea una despedida. Sólo una montaña rusa que nos ha jugado una mala jugada...'
+                    },
+                    photos: [
+                        {
+                            placeholder: '📸 Foto 1\nHaz clic para agregar',
+                            url: '/assets/images/1.jpg',
+                            alt: 'Lau'
+                        },
+                        // {
+                        //     placeholder: '📸 Foto 2\nHaz clic para agregar',
+                        //     url: '/assets/images/2.jpg',
+                        //     alt: 'Lawra'
+                        // },
+                        // {
+                        //     placeholder: '📸 Foto 3\nHaz clic para agregar',
+                        //     url: '/assets/images/3.jpg',
+                        //     alt: 'Laura'
+                        // }
+                    ],
+                    youtubeUrl: '',
+                    audioUrl: '/assets/sounds/senal.mp3',
+                    audioTitle: 'Nuestro Audio Especial',
+                    signature: 'para la otra parte de mí, Laura',
+                    scrollY: 0,
+                    scrollPercentage: 0,
+                    isVisible: false,
+                    hearts: []
+                }
+            },
+            mounted() {
+                this.createHearts();
+                this.setupScrollEffects();
+                this.setupIntersectionObserver();
+            },
+            methods: {
+                createHearts() {
+                    for (let i = 0; i < 15; i++) {
+                        this.hearts.push({
+                            id: i,
+                            x: Math.random() * 100,
+                            delay: Math.random() * 6
+                        });
+                    }
+                },
+                setupScrollEffects() {
+                    window.addEventListener('scroll', () => {
+                        this.scrollY = window.scrollY;
+                        this.scrollPercentage = Math.round(
+                            (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100
+                        );
+                    });
+                },
+                setupIntersectionObserver() {
+                    const observer = new IntersectionObserver((entries) => {
+                        entries.forEach(entry => {
+                            if (entry.isIntersecting) {
+                                entry.target.classList.add('visible');
+                            }
+                        });
+                    }, {
+                        threshold: 0.1
+                    });
+
+                    const elements = document.querySelectorAll('.fade-in');
+                    elements.forEach(el => observer.observe(el));
+                },
+                addPhoto(index) {
+                    const url = prompt('Ingresa la URL de la imagen:');
+                    if (url) {
+                        this.photos[index].url = url;
+                    }
+                },
+                addYouTubeVideo() {
+                    const url = prompt('Ingresa la URL del video de YouTube (formato embed):');
+                    if (url) {
+                        this.youtubeUrl = url;
+                    }
+                },
+                playAudio() {
+                    const audio = document.querySelector('.audio-element');
+                    if (audio) {
+                        audio.play();
+                    }
+                },
+                pauseAudio() {
+                    const audio = document.querySelector('.audio-element');
+                    if (audio) {
+                        audio.pause();
+                    }
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
